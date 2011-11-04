@@ -1,14 +1,14 @@
 CC 	 =	g++
 LIBS	 = 	-lm 
 
-mazeRoute: main.o Maze.o Point.o PrimMST.o Net.o Box.o random.o Segment.o RouteEdge.o RouteTracks.o Graph.o CoupleFree.o SteinerTree.o GridGraph.o Converter.o
-	g++ -o mazeRoute main.o Maze.o Point.o PrimMST.o RouteEdge.o RouteTracks.o  Net.o Box.o random.o CoupleFree.o Segment.o Graph.o SteinerTree.o GridGraph.o Converter.o
+mazeRoute: main.o Maze.o Point.o PrimMST.o Net.o Box.o random.o Segment.o RouteEdge.o RouteTracks.o Graph.o CoupleFree.o SteinerTree.o GridGraph.o
+	g++ -o mazeRoute main.o Maze.o Point.o PrimMST.o RouteEdge.o RouteTracks.o  Net.o Box.o random.o CoupleFree.o Segment.o Graph.o SteinerTree.o GridGraph.o
 
-mazeRoute.db: main.db.o Maze.db.o Point.db.o PrimMST.db.o Net.db.o Box.db.o CoupleFree.db.o Segment.db.o Graph.db.o SteinerTree.db.o GridGraph.db.o Converter.db.o
-	g++ -o mazeRoute.db main.o Maze.o Point.o PrimMST.o RouteEdge.o RouteTracks.o  Net.o Box.o CoupleFree.o Segment.o Graph.o SteinerTree.o GridGraph.o Converter.o
+mazeRoute.db: main.db.o Maze.db.o Point.db.o PrimMST.db.o Net.db.o Box.db.o CoupleFree.db.o Segment.db.o Graph.db.o SteinerTree.db.o GridGraph.db.o
+	g++ -o mazeRoute.db main.o Maze.o Point.o PrimMST.o RouteEdge.o RouteTracks.o  Net.o Box.o CoupleFree.o Segment.o Graph.o SteinerTree.o GridGraph.o
 
-mazeRoute.prof: main.p.o Maze.p.o Point.p.o PrimMST.p.o Net.p.o Box.p.o CoupleFree.p.o Segment.p.o Graph.p.o SteinerTree.p.o GridGraph.p.o Converter.p.o
-	g++ -pg -o mazeRoute.prof main.o Maze.o Point.o PrimMST.o RouteEdge.o RouteTracks.o  Net.o Box.o CoupleFree.o Segment.o Graph.o SteinerTree.o GridGraph.o Converter.o
+mazeRoute.prof: main.p.o Maze.p.o Point.p.o PrimMST.p.o Net.p.o Box.p.o CoupleFree.p.o Segment.p.o Graph.p.o SteinerTree.p.o GridGraph.p.o
+	g++ -pg -o mazeRoute.prof main.o Maze.o Point.o PrimMST.o RouteEdge.o RouteTracks.o  Net.o Box.o CoupleFree.o Segment.o Graph.o SteinerTree.o GridGraph.o
 
 clean:
 	rm *.o *~ mazeRoute mazeRoute.db mazeRoute.prof
@@ -21,7 +21,7 @@ temp.o: temp.cc
 
 # ------------------ Debug compile ------------------------------
 
-main.db.o: main.cc Maze.db.o Point.db.o Converter.db.o
+main.db.o: main.cc Maze.db.o Point.db.o 
 	g++ -c -g main.cc
 
 Maze.db.o: Maze.cc Maze.h MazePoint.h Point.db.o Pin.h Net.db.o PrimMST.db.o RouteTracks.db.o 
@@ -60,12 +60,9 @@ SteinerTree.db.o: SteinerTree.h SteinerTree.cc GridGraph.db.o Pin.h Point.o
 GridGraph.db.o: GridGraph.h GridGraph.cc Graph.db.o Pin.h Point.o
 	g++ -c -g GridGraph.cc
 
-Converter.db.o: Converter.h Converter.cc Net.db.o Pin.h
-	g++ -c -g Converter.cc
-
 # ----------------------- Optimized compile ----------------------------
 
-main.o: main.cc Maze.o Point.o Converter.o
+main.o: main.cc Maze.o Point.o 
 	g++ -c -O2 main.cc
 
 Box.o: Box.h Box.cc Point.o
@@ -106,9 +103,6 @@ SteinerTree.o: SteinerTree.h SteinerTree.cc GridGraph.o Pin.h Point.o
 
 GridGraph.o: GridGraph.h GridGraph.cc Graph.o Point.o Pin.h
 	g++ -c -O2 GridGraph.cc
-
-Converter.o: Converter.h Converter.cc Net.o Pin.h
-	g++ -c -O2 Converter.cc
 
 # --------------------- Profiling compile --------------------------
 
