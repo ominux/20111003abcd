@@ -256,6 +256,8 @@ int main(int argc, char *argv[])
     }
   
   //Read in the row and columns.  grid column row
+
+  //need to change
   int x,y,numNets,verticalCapacity,horizontalCapacity;
   char buffer[80];
   input.getline(buffer, 80);
