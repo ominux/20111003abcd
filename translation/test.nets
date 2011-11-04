@@ -1,0 +1,19 @@
+UCLA nets 1.0
+# Created      : Thu Apr 18 21:41:57 2002
+# User         : xjyang@sianaart.cs.ucla.edu (Xiaojian Yang) ER Lab, UCLA
+# Platform     : SunOS 5.8 sparc SUNW,Ultra-5_10
+
+NumNets :       3
+NumPins :       44266
+
+NetDegree : 3
+        a10828   I : 88 252
+        a11529   I : 66 252
+        a1213    I : 88 252
+NetDegree : 2
+        a10828   I : 176 252
+        a6620    I : 88 252
+NetDegree : 2
+        a1181    I : 132 252
+        a388     I : 88 252
+
