@@ -71,7 +71,6 @@ void Converter::readPlacement()
 		pinX = pinX + (width/2);
 		pinY = pinY + (height/2);
 		name =(string)cellname;
-		cout << name <<" " <<cellname<<endl;
 		if(pinX < 0 || pinX > width || pinY < 0 || pinY > height){
 			cout << "Converter::the pin is invalid"<<endl;
 		}
@@ -127,6 +126,8 @@ void Converter::fileTranslation()
 	input.getline(buffer, 100);
 
 	for(int i=0; i<numNets; i++){
+		int netID;
+		int numPins;
 		input.getline(buffer, 100);
 		sscanf(buffer, "NetDegree %*s %d", &numPins);
 		//get the net name
@@ -137,8 +138,6 @@ void Converter::fileTranslation()
 
 		netID = i;
 		
-		output<< netName << " " << netID << " " << numPins << endl;
-				
 		//set pins location
 		for(int j=0; j< numPins; j++){
 			int pinX, pinY;
