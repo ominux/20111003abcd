@@ -12,8 +12,10 @@
 #include <list>
 #include "Module.h"
 
+using namespace std;
+
 typedef list<Module *> ModuleLst;
-typedef ModuleLst::iterator ModuleLstIrt;
+typedef ModuleLst::iterator ModuleLstItr;
 
 class Tier 
 {
@@ -48,6 +50,6 @@ class Tier
 	//functions
 		int calc_metal_num(int fo, float ew, float w_pitch);
 		float calc_area(int m_num);
-}
+};
 
 #endif

@@ -7,7 +7,7 @@
 
 #include "Module.h"
 
-void Module::setConnections(Connect * newConnect)
+void Module::setConnections(Connection newConnect)
 {
-	connections->push_front(newConnect);	
+	connections->push_back(newConnect);	
 }

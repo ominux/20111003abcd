@@ -8,12 +8,10 @@
 
 #include "Design.h"
 #include <cmath>
-#include <stdio>
+#include <stdio.h>
+#include <iostream>
 
 using namespace std;
-
-typedef vector<Connection *> ConnectVect;
-typedef ConnectVect::iterator ConnectVectItr;
 
 float Design::calc_design_cost(PROCESS_PARA proc, PACKAGE_PARA pack, BONDING_PARA bond, BONDING_KNOB knob)
 {
@@ -23,15 +21,16 @@ float Design::calc_design_cost(PROCESS_PARA proc, PACKAGE_PARA pack, BONDING_PAR
 	float die_yield = 1, y;
 	int i;
 
-	int number_tier;
-	number_tier = (int)stackings.size();
+	int number_tier = 0;
+	for(TierVectItr m = stackings->begin(); m!= stackings->end(); m++)
+		number_tier++;
 
 	//calculate the maximum area, max area among tier+TSV overhead
 	float area = 0.0;
 	float temp_area = 0.0;
 	for(i = 0; i < number_tier; i++)
 	{
-		temp_area = stackings[i].tier_area;
+		temp_area = (*stackings)[i].getTier_area();;
 		//the bottom tier
 		if(!i)
 			temp_area += tsv_num[i]*tsv_pitch;
@@ -55,7 +54,8 @@ float Design::calc_design_cost(PROCESS_PARA proc, PACKAGE_PARA pack, BONDING_PAR
 	for(i = 0; i<number_tier; i++)
 	{
 		wafer_cost = proc.wafer_cost;
-		wafer_cost += stackings[i]->metal_num * proc.metal_layer_cost;
+		int metal_num = (*stackings)[i].getMetal_num();
+		wafer_cost += metal_num * proc.metal_layer_cost;
 		wafer_cost += proc.wafer_sort_cost;
 
 		if(knob.wafer_bonding){ //d2w bonding
@@ -72,7 +72,7 @@ float Design::calc_design_cost(PROCESS_PARA proc, PACKAGE_PARA pack, BONDING_PAR
 	for(i = 0; i <number_tier-1; i++)
 	{
 		if(knob.tsv == 0)
-			cost += tsv_num[i] * bodn.tsv_laser_cost;
+			cost += tsv_num[i] * bond.tsv_laser_cost;
 		else
 			cost += bond.tsv_etch_cost/util; 
 	}	
@@ -107,7 +107,7 @@ float Design::calc_design_cost(PROCESS_PARA proc, PACKAGE_PARA pack, BONDING_PAR
 		
 }
 
-void Design::3d_partition(ModuleLib all_module)
+void Design::partition_threed(ModuleLib all_module)
 {
 	
 }
@@ -123,16 +123,16 @@ void Design::calc_tsv_num(ModuleLib all_module)
 	for(one = all_module.begin(); one!= all_module.end(); one++)
 	{
 		//get the connection of one module
-		ConnectVect one_con = one->getConnections();
+		ConnectVect * one_con = one->getConnections();
 		current_tier = one->getTier();
-		for(ConnectVectItr i = one_con.begin(); i!= one_con.end(); i++)
+		for(ConnectVectItr i = one_con->begin(); i!= one_con->end(); i++)
 		{
 			//get the connected module
 			temp_id = i->getID();
-			con_tier = all_module[temp_id]->getTier();
+			con_tier = all_module[temp_id].getTier();
 			if(con_tier>current_tier)
 			{
-				temp_num = all_module[temp_id]->getNum();
+				temp_num = i->getNum();
 				//from current tier, every upper tier should add tsv_num
 				for(int k = current_tier; k<con_tier; k++)
 					tsv_num[k] += temp_num;	

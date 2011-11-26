@@ -16,9 +16,11 @@
 
 #define MAX_TIER 4
 
-typedef vector<Tier *> TierVect;
+using namespace std;
+
+typedef vector<Tier> TierVect;
 typedef TierVect::iterator TierVectItr;
-typedef vector<Module *> ModuleLib;
+typedef vector<Module> ModuleLib;
 typedef ModuleLib::iterator ModuleLibItr;
 
 class Design
@@ -40,24 +42,24 @@ class Design
 		}
 
 		inline ~Design(){
-			for(TierVectItr i =stackings.begin(); i!= stackings.end(); i++)
-				delete(*i);
+			//for(TierVectItr i =stackings->begin(); i!= stackings->end(); i++)
+			//	delete(*i);
 			delete stackings;
 		}
 		
 	//accessors
 		inline int* getTSV_num() {return tsv_num;}
 		inline float getDesign_cost() {return design_cost;}
-		inline TierVect * getStacking() {return stackings;}
+		inline TierVect* getStacking() {return stackings;}
 	//modifiers
 		inline void setDesign_cost(float cost) {design_cost = cost;}
-		inline void setStacking(Tier* newTier) {stackings->push_back(newTier);}
+		inline void setStacking(Tier newTier) {stackings->push_back(newTier);}
 		inline void setTSV_num(int i, int num) {tsv_num[i] = num;}
-		inline void setTSV_pitch(float pitch) {tsv_pitch = pithc;}
+		inline void setTSV_pitch(float pitch) {tsv_pitch = pitch;}
 	//functions
 		float calc_design_cost(PROCESS_PARA proc, PACKAGE_PARA pack, BONDING_PARA bond, BONDING_KNOB knob);
-		void 3d_partition(ModuleLib all_module);
+		void partition_threed(ModuleLib all_module);
 		void calc_tsv_num(ModuleLib all_module);
-}
+};
 
 #endif
