@@ -36,7 +36,7 @@ class Module
 		char name[64]; //name of the module
 		int moduleID;
 		int gateCount; //total number of gate count
-		float moduleArea; //total module area after synthesis
+		float moduleArea; //total module area after synthesis, um^2
 		int tier_num;
 		ConnectVect * connections;
 
@@ -58,6 +58,7 @@ class Module
 			tier_num = 0;
 			connections = new ConnectVect();
 		}
+
 		inline ~Module()
 		{
 			for(ConnectVectItr i = connections->begin(); i!= connections.end(); i++)
