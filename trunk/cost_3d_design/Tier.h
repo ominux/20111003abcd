@@ -15,12 +15,11 @@
 typedef list<Module *> ModuleLst;
 typedef ModuleLst::iterator ModuleLstIrt;
 
-class Design
+class Tier 
 {
 	private:
 		int metal_num;
 		float tier_area;
-		int tsv_num;	//tsv number to the upper tier, if it is the top one, the value is 0
 		float tier_cost;	//each tier cost
 		ModuleLst * modules;
 		
@@ -29,7 +28,6 @@ class Design
 			metal_num = 6;
 			tier_area = 0.0;
 			tier_cost = 0.0;
-			tsv_num = 0;
 			modules = new ModuleLst();
 		}
 	
@@ -42,19 +40,17 @@ class Design
 	//accessors
 		inline int getMetal_num() {return metal_num;}
 		inline float getTier_area() {return tier_area;}
-		inline float getTsv_num() {return tsv_num;}
 		inline float getTier_cost() {return tier_cost;}
-
+	
 	//modifiers
 		inline void setMetal_num(int num) {metal_num = num;}
 		inline void setTier_area(float area) {tier_area = area;}
-		inline void setTsv_num(int num) {tsv_num = num;}
 		inline void setTier_cost(float cost) {tier_cost = cost;}
-
+	
 	//functions
-		void calc_metal_num();
-		void calc_area();
-		void calc_cost();
+		int calc_metal_num(int fo, float ew, float w_pitch);
+		float calc_area(int m_num);
+		float calc_cost();
 }
 
 #endif

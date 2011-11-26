@@ -10,7 +10,7 @@
 #ifndef MODULE
 #define MODULE
 
-#include <Vector>
+#include <vector>
 #include <string.h>
 
 class Connection
@@ -23,9 +23,11 @@ class Connection
 		}
 		int moduleID;
 		int connect_num;
+	inline void getID() {return moduleID;}
+	inline void getNum() {return connect_num;}
 }
 
-typedef vector<Connect *> ConnectVect;
+typedef vector<Connection *> ConnectVect;
 typedef ConnectVect::iterator ConnectVectItr;
 
 class Module
@@ -33,7 +35,7 @@ class Module
 	private:
 		char name[64]; //name of the module
 		int moduleID;
-		int gateCount; //total numver of gate count
+		int gateCount; //total number of gate count
 		float moduleArea; //total module area after synthesis
 		int tier_num;
 		ConnectVect * connections;
@@ -79,7 +81,6 @@ class Module
 		void setConnections(Connect * newConnect);
 
 		//others
-
 	
 }
 
