@@ -19,7 +19,7 @@ class Tier
 {
 	private:
 		int metal_num;
-		float tier_area;
+		float tier_area;	//unit mm^2
 		float tier_cost;	//each tier cost
 		ModuleLst * modules;
 		
@@ -32,8 +32,6 @@ class Tier
 		}
 	
 		inline ~Tier(){
-			for(ModuleLstItr i= modules->begin(); i!= modules.end(); i++)
-				delete (*i);
 			delete modules;
 		}
 	
@@ -50,7 +48,6 @@ class Tier
 	//functions
 		int calc_metal_num(int fo, float ew, float w_pitch);
 		float calc_area(int m_num);
-		float calc_cost();
 }
 
 #endif

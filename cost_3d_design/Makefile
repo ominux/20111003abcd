@@ -1,11 +1,11 @@
 CC 	 =	g++
 LIBS	 = 	-lm 
 
-costDesign: main.o Area.o Module.o
-	g++ -o costDesign main.o Area.o Module.o
+costDesign: main.o Module.o Tier.o Design.o
+	g++ -o costDesign main.o Module.o Tier.o Design.o
 
-costDesign.db: main.db.o Area.db.o Module.db.o
-	g++ -o costDesign.db main.o Area.o Module.o
+costDesign.db: main.db.o Module.db.o Tier.db.o Design.db.o
+	g++ -o costDesign.db main.o Module.o Tier.o Design.o
 
 clean: rm *.o *~ costDesign costDesign.db
 
@@ -29,15 +29,17 @@ clean: rm *.o *~ costDesign costDesign.db
 
 # ------------------ Debug compile ------------------------------
 
-main.db.o: main.cc Area.db.o Module.db.o
+main.db.o: main.cc Design.o
 	g++ -c -g main.cc
-
-Area.db.o: Area.h Area.cc
-	g++ -c -g Area.cc
 
 Module.db.o: Module.h Module.cc
 	g++ -c -g Module.cc
 
+Tier.db.o: Tier.h Tier.cc Module.db.o
+	g++ -c -g Tier.cc
+
+Design.db.o: Design.h Design.cc Tier.db.o Module.db.o
+	g++ -c -g Design.cc
 #main.db.o: main.cc Maze.db.o Point.db.o 
 #	g++ -c -g main.cc
 
@@ -50,16 +52,17 @@ Module.db.o: Module.h Module.cc
 #Point.db.o: Point.h Point.cc 
 #	g++ -c -g Point.cc
 # ----------------------- Optimized compile ----------------------------
-main.o: main.cc Area.o Module.o
+main.o: main.cc Design.o
 	g++ -c -O2 main.cc
-
-Area.o: Area.h Area.cc
-	g++ -c -O2 Area.cc
 
 Module.o: Module.h Module.cc
 	g++ -c -O2 Module.cc
 
+Tier.o: Tier.h Tier.cc Module.o
+	g++ -c -O2 Tier.cc
 
+Design.o: Design.h Design.cc Tier.o
+	g++ -c -O2 Design.cc
 #main.o: main.cc Maze.o Point.o 
 #	g++ -c -O2 main.cc
 
