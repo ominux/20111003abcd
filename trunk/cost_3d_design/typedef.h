@@ -5,8 +5,6 @@
 #ifndef TYPEDEF_H
 #define TYPEDEF_H
 
-#define MAX_TIER 5
-
 typedef struct {
 	char name[50];				// technology name
 	double diameter;			// diameter of a single wafer, unit: mm
@@ -36,14 +34,6 @@ typedef struct {
 	double tsv_etch_cost;		// TSV cost (etch), per mask
 	double thinning_cost;		// thinning cost
 } BONDING_PARA;
-
-typedef struct {
-	double area;				// unit mm^2
-	int number_tier;			// number of 3D tier
-	int metal_layer[MAX_TIER];
-	int tsv[MAX_TIER];
-	PROCESS_PARA process[MAX_TIER];
-} DESIGN_PARA;
 
 typedef struct {
 	int wafer_bonding;			// 0: W2W bonding, 1: D2W bonding

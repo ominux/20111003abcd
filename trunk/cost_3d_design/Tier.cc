@@ -8,9 +8,6 @@
 #include <cmath>
 #include "Tier.h"
 
-typedef vector<Connection *> ConnectVect;
-typedef ConnectVect::iterator ConnectVectItr;
-
 int Tier::calc_metal_num(int fo, float ew, float w_pitch)
 {
 	unsigned int gateCount;		
@@ -18,16 +15,16 @@ int Tier::calc_metal_num(int fo, float ew, float w_pitch)
 	{
 		float init_area;
 		//calculate the total area by all modules
-		for(ModuleLstItr i = modules->begin(); i!= modules.end(); i++)
-			init_area += i->getArea();	
+		for(ModuleLstItr i = modules->begin(); i!= modules->end(); i++)
+			init_area += (*i)->getArea();	
 		setTier_area(init_area);
 	}	
 	
-	for(ModuleLstItr i = modules->begin(); i!= modules.end(); i++)
-		gateCount += i->getCount();
+	for(ModuleLstItr i = modules->begin(); i!= modules->end(); i++)
+		gateCount += (*i)->getCount();
 
 	//calculate average wire length
-	float i, j, k;
+	float i, j, k, rm;
 	float rent_p = 0.6;
 
 	i= 2.0/9;

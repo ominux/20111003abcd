@@ -13,6 +13,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
+#include <cstring>
 
 using namespace std;
 
@@ -62,7 +63,7 @@ int main(int argc, char *argv[])
 	BONDING_PARA bonding;
 	BONDING_KNOB knob;
 	
-	process.name = "300mm - 45nm -TSMC -dual gate ox CMOS Logic";
+	strcpy(process.name, "300mm - 45nm - TSMC - dula gate ox CMOS Logic");
 	process.diameter = 300;
 	process.technology_node = 45;
 	process.default_metal_layer = 6;

@@ -13,6 +13,8 @@
 #include <vector>
 #include <string.h>
 
+using namespace std;
+
 class Connection
 {
 	public:
@@ -23,11 +25,11 @@ class Connection
 		}
 		int moduleID;
 		int connect_num;
-	inline void getID() {return moduleID;}
-	inline void getNum() {return connect_num;}
-}
+	inline int getID() {return moduleID;}
+	inline int getNum() {return connect_num;}
+};
 
-typedef vector<Connection *> ConnectVect;
+typedef vector<Connection> ConnectVect;
 typedef ConnectVect::iterator ConnectVectItr;
 
 class Module
@@ -61,8 +63,8 @@ class Module
 
 		inline ~Module()
 		{
-			for(ConnectVectItr i = connections->begin(); i!= connections.end(); i++)
-				delete (*i);
+			//for(ConnectVectItr i = connections->begin(); i!= connections->end(); i++)
+			//	delete i;
 			delete connections;
 		}
 	
@@ -71,7 +73,7 @@ class Module
 		inline int	getTier() {return tier_num;}
 		inline float 	getArea()	{return moduleArea;}
 		inline float	getCount()	{return gateCount;}
-		inline char *	getName()	{return name;)
+		inline char *	getName()	{return name;}
 
 		//modifiers
 		inline void setTier(int i) {tier_num = i;}
@@ -79,10 +81,10 @@ class Module
 		inline void setCount(int count) {gateCount = count;}
 		inline void setArea(int area)	{moduleArea = area;}
 		inline void setName(char *newName) {strcpy(name, newName);}
-		void setConnections(Connect * newConnect);
+		void setConnections(Connection newConnect);
 
 		//others
 	
-}
+};
 
 #endif
