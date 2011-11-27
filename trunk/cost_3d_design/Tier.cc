@@ -48,3 +48,10 @@ float Tier::calc_area(int num)
 	
 }
 
+float Tier::metal_util(float w_pitch)
+{
+	float supply;
+	float demand;
+
+	supply = tier_area / ();
+}

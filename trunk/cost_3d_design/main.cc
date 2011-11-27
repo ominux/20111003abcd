@@ -14,8 +14,51 @@
 #include <fstream>
 #include <stdio.h>
 #include <cstring>
+#include <list>
+
+#define POPULATION 9 //total popluation number
+#define MAX_ITER  6 //totoal iteration time
 
 using namespace std;
+
+typedef list<Design> DesignList;
+typedef DesignList::iterator DesignsItr;
+
+void read_modules(ifstream * file, ModuleLib * lib)
+{
+	char buffer[80];
+	int module_size;
+	file->getline(buffer, 80);
+	sscanf(buffer, "%d", &module_size);
+
+	for(int i = 0; i< module_size; i++)
+	{
+		int count; //gate count
+		float size; //module area
+		int connect_count;
+		file->getline(buffer,80);
+		sscanf(buffer, "%d %f", &count, &size);
+
+		Module temp = new Module(i, count, size);
+
+		file->getline(buffer,80);
+		sscanf(buffer, "%d", &connect_count);
+
+		int id, num;
+		for(int m = 0; m < connect_count; m++)
+		{
+			file->getline(buffer, 80);
+			sscanf(buffer, "%d %d", &id, &num);
+			Connection connect = new Connection(id, num);
+			temp->setConnections(*connect); //copy the content of the connection to connections in module
+			delete connect;
+		}		
+
+		lib->push_back(*temp); //copy the module to library
+		delete temp;
+	}
+	
+}
 
 int main(int argc, char *argv[])
 {
@@ -42,20 +85,11 @@ int main(int argc, char *argv[])
 	}
 	
 	//variables
-	Design temp_design();
-	Design best_design();	
+	DesignList design_list;
+	ModuleLib  module_lib;	
 	
 	//read file	
-	char buffer[80];
-	int module_size;
-	input.getline(buffer, 80);
-	sscanf(buffer, "%d", &module_size);
-	
-	Module temp_module;
-	for(int j = 0; j< module_size; j++)
-	{
-		
-	}
+	read_modules(&input, &module_lib);
 	
 	//setting related parameters, from Xiangyu's, can changed to read from input file	
 	PROCESS_PARA process;
@@ -97,8 +131,57 @@ int main(int argc, char *argv[])
 	float wire_pitch = 0.5; //unit um
 
 	//main body
-	
+	for(int i =0; i< POPULATION; i++)
+	{
+		Design temp = new Design();
+		//temp->partition();
+		design_list.push_back(*temp);
+		(design_list.back()).partition(module_lib);
+		(design_list.back()).calc_design_cost(process, package, bonding, knob);
+		delete temp;
+	}	
 		
+	//sorting!!!!May need to change
+	design_list.sort();
+
+	int iter_time = 0; //iteration times
+	while(iter_time < MAX_ITER)
+	{
+		list<DesignsItr> loser;
+		int ingrade = 0;
+		for(DesignsItr ditr = design_list.begin(); ditr != design_list.end(); ditr++, ingrade++)
+		{
+			//mutate part
+			if(ingrade > POPULATION/3){
+				if(ingrade<2*POPULATION/3){
+					ditr->mutate();
+					ditr->calc_design_cost(process, package, bonding, knob);
+				}else{
+					loser.push_back(ditr); //list of repartition design
+				}
+			}
+		}
+		for(loser::iterator loseritr = loser.being(); loseritr != loser.end(); loseritr++)
+			design_list.erase(*loseritr);
+		for(int regen = loser.size(); regen!=0; regen--)
+		{
+			Design temp = new Design();
+			design_list.push_back(*temp);
+			(design_list.back()).partition(module_lib);
+			(design_list.back()).calc_design_cost(process, package, bonding, knob);
+			delete temp;
+		}
+
+		loser.clear();
+		design_list.sort();
+
+		iter_time++;
+	}
+
 	//deconstruct??remember to deconstruct modules
+	design_list.clear();
+	module_lib.clear();
+
+	return 0;
 }
 

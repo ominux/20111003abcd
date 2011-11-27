@@ -1,11 +1,11 @@
 CC 	 =	g++
 LIBS	 = 	-lm 
 
-costDesign: main.o Module.o Tier.o Design.o
-	g++ -o costDesign main.o Module.o Tier.o Design.o
+costDesign: main.o Tier.o Design.o
+	g++ -o costDesign main.o Tier.o Design.o
 
-costDesign.db: main.db.o Module.db.o Tier.db.o Design.db.o
-	g++ -o costDesign.db main.o Module.o Tier.o Design.o
+costDesign.db: main.db.o Tier.db.o Design.db.o
+	g++ -o costDesign.db main.o Tier.o Design.o
 
 clean: rm *.o *~ costDesign costDesign.db
 
@@ -32,13 +32,13 @@ clean: rm *.o *~ costDesign costDesign.db
 main.db.o: main.cc Design.o
 	g++ -c -g main.cc
 
-Module.db.o: Module.h Module.cc
-	g++ -c -g Module.cc
+#Module.db.o: Module.h Module.cc
+#	g++ -c -g Module.cc
 
-Tier.db.o: Tier.h Tier.cc Module.db.o
+Tier.db.o: Tier.h Tier.cc Module.h
 	g++ -c -g Tier.cc
 
-Design.db.o: Design.h Design.cc Tier.db.o Module.db.o
+Design.db.o: Design.h Design.cc Tier.db.o Module.h
 	g++ -c -g Design.cc
 #main.db.o: main.cc Maze.db.o Point.db.o 
 #	g++ -c -g main.cc
@@ -55,13 +55,13 @@ Design.db.o: Design.h Design.cc Tier.db.o Module.db.o
 main.o: main.cc Design.o
 	g++ -c -O2 main.cc
 
-Module.o: Module.h Module.cc
-	g++ -c -O2 Module.cc
+#Module.o: Module.h Module.cc
+#	g++ -c -O2 Module.cc
 
-Tier.o: Tier.h Tier.cc Module.o
+Tier.o: Tier.h Tier.cc Module.h
 	g++ -c -O2 Tier.cc
 
-Design.o: Design.h Design.cc Tier.o
+Design.o: Design.h Design.cc Tier.h
 	g++ -c -O2 Design.cc
 #main.o: main.cc Maze.o Point.o 
 #	g++ -c -O2 main.cc
