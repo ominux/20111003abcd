@@ -50,6 +50,7 @@ class Tier
 	//functions
 		int calc_metal_num(int fo, float ew, float w_pitch);
 		float calc_area(int m_num);
+		float metal_util(float w_pitch);
 };
 
 #endif

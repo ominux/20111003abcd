@@ -81,7 +81,7 @@ class Module
 		inline void setCount(int count) {gateCount = count;}
 		inline void setArea(int area)	{moduleArea = area;}
 		inline void setName(char *newName) {strcpy(name, newName);}
-		void setConnections(Connection newConnect);
+		inline void setConnections(Connection newConnect) {connections->push_back(newConnect);}
 
 		//others
 	

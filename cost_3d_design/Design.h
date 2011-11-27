@@ -58,7 +58,8 @@ class Design
 		inline void setTSV_pitch(float pitch) {tsv_pitch = pitch;}
 	//functions
 		float calc_design_cost(PROCESS_PARA proc, PACKAGE_PARA pack, BONDING_PARA bond, BONDING_KNOB knob);
-		void partition_threed(ModuleLib all_module);
+		void partition(ModuleLib all_module); //random select modules and put them into tier
+		void mutate(ModuleLib all_module); //adjust modules between tier to get better cost
 		void calc_tsv_num(ModuleLib all_module);
 };
 
