@@ -41,16 +41,5 @@ typedef struct {
 	int tsv;					// 0: Laser; 1: Etch
 } BONDING_KNOB;
 
-typedef enum {
-	IBM_300mm_130nm_logic,
-	IBM_300mm_130nm_bicmos,
-	TSMC_300mm_130nm,
-	UMC_300mm_130nm,
-	TI_300mm_90nm,
-	TSMC_300mm_90nm,
-	IBM_300mm_65nm,
-	TSMC_300mm_65nm,
-	TSMC_300mm_45nm
-} PROCESS_NAME;
 
 #endif

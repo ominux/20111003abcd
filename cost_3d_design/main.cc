@@ -11,6 +11,7 @@
 #include "Tier.h"
 #include "Module.h"
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <stdio.h>
 #include <cstring>
@@ -39,7 +40,7 @@ void read_modules(ifstream * file, ModuleLib * lib)
 		file->getline(buffer,80);
 		sscanf(buffer, "%d %f", &count, &size);
 
-		Module temp = new Module(i, count, size);
+		Module * temp = new Module(i, count, size);
 
 		file->getline(buffer,80);
 		sscanf(buffer, "%d", &connect_count);
@@ -49,7 +50,7 @@ void read_modules(ifstream * file, ModuleLib * lib)
 		{
 			file->getline(buffer, 80);
 			sscanf(buffer, "%d %d", &id, &num);
-			Connection connect = new Connection(id, num);
+			Connection * connect = new Connection(id, num);
 			temp->setConnections(*connect); //copy the content of the connection to connections in module
 			delete connect;
 		}		
@@ -60,10 +61,18 @@ void read_modules(ifstream * file, ModuleLib * lib)
 	
 }
 
+bool compare_design(Design first, Design second)
+{
+	if(first.getDesign_cost() < second.getDesign_cost())
+		return true;
+	else
+		return false;
+}
+
 int main(int argc, char *argv[])
 {
-	if(argc != 3){
-		cout<< "./CostDesign infile outfile"<<endl;
+	if(argc != 4){
+		cout<< "./CostDesign infile outfile layer_num"<<endl;
 		return 0;
 	}
 	
@@ -83,101 +92,71 @@ int main(int argc, char *argv[])
 		cout<< argv[2] << "cannot be opened. Exiting..." << endl;
 		//return -1;
 	}
-	
+
+	//get the input of layer number
+	int layer_num;
+	stringstream ss(argv[3]);
+	ss >> layer_num;
+	if(layer_num > MAX_TIER)
+	{
+		cout<<"Max Tier:" << MAX_TIER << endl;
+		return -1;
+	}	
 	//variables
 	DesignList design_list;
 	ModuleLib  module_lib;	
 	
 	//read file	
 	read_modules(&input, &module_lib);
-	
-	//setting related parameters, from Xiangyu's, can changed to read from input file	
-	PROCESS_PARA process;
-	PACKAGE_PARA package;
-	BONDING_PARA bonding;
-	BONDING_KNOB knob;
-	
-	strcpy(process.name, "300mm - 45nm - TSMC - dula gate ox CMOS Logic");
-	process.diameter = 300;
-	process.technology_node = 45;
-	process.default_metal_layer = 6;
-	process.metal_layer_cost = 249.492;
-	process.wafer_cost = 4232.795;
-	process.wafer_sort_cost = 1182.66;
-	process.defect_density = 0.4;
-	process.kgd_cost = 4.565;
-
-	bonding.thinning_cost = 250;
-	bonding.d2w_bonding_yield = 0.99;
-	bonding.w2w_bonding_yield = 0.99;
-	bonding.w2w_bonding_cost = 22.9;
-	bonding.d2w_bonding_cost = 115/20;
-	bonding.tsv_etch_cost = 250;
-	bonding.tsv_laser_cost = 0.001;
-
-	knob.face = 0;
-	knob.tsv = 1;
-	knob.wafer_bonding = 1;
-
-	//package.name = "pBGA";
-	package.package_cost = 0.218;
-	package.package_yield = 0.995;
-	package.package_test_cost = 0.544;
-	package.package_test_yield = 0.998;
-
-	//used in Tier.cc to calculate metal layer needed
-	int fanout = 4;
-	float wire_efficient = 0.85;
-	float wire_pitch = 0.5; //unit um
 
 	//main body
 	for(int i =0; i< POPULATION; i++)
 	{
-		Design temp = new Design();
+		Design * temp = new Design();
 		//temp->partition();
 		design_list.push_back(*temp);
-		(design_list.back()).partition(module_lib);
-		(design_list.back()).calc_design_cost(process, package, bonding, knob);
+		(design_list.back()).partition(module_lib, layer_num); //calculate cost in here
 		delete temp;
 	}	
 		
-	//sorting!!!!May need to change
-	design_list.sort();
+	//sorting based on design cost
+	design_list.sort(compare_design);
 
 	int iter_time = 0; //iteration times
 	while(iter_time < MAX_ITER)
 	{
 		list<DesignsItr> loser;
+
 		int ingrade = 0;
 		for(DesignsItr ditr = design_list.begin(); ditr != design_list.end(); ditr++, ingrade++)
 		{
 			//mutate part
 			if(ingrade > POPULATION/3){
 				if(ingrade<2*POPULATION/3){
-					ditr->mutate();
-					ditr->calc_design_cost(process, package, bonding, knob);
+					ditr->mutate(module_lib);
 				}else{
 					loser.push_back(ditr); //list of repartition design
 				}
 			}
 		}
-		for(loser::iterator loseritr = loser.being(); loseritr != loser.end(); loseritr++)
+		for(list<DesignsItr>::iterator loseritr = loser.begin(); loseritr != loser.end(); loseritr++)
 			design_list.erase(*loseritr);
 		for(int regen = loser.size(); regen!=0; regen--)
 		{
-			Design temp = new Design();
+			Design * temp = new Design();
 			design_list.push_back(*temp);
-			(design_list.back()).partition(module_lib);
-			(design_list.back()).calc_design_cost(process, package, bonding, knob);
+			(design_list.back()).partition(module_lib, layer_num);
 			delete temp;
 		}
 
 		loser.clear();
-		design_list.sort();
+		design_list.sort(compare_design);
 
 		iter_time++;
 	}
 
+	//remember to output design to file
+	
 	//deconstruct??remember to deconstruct modules
 	design_list.clear();
 	module_lib.clear();

@@ -57,8 +57,8 @@ class Design
 		inline void setTSV_num(int i, int num) {tsv_num[i] = num;}
 		inline void setTSV_pitch(float pitch) {tsv_pitch = pitch;}
 	//functions
-		float calc_design_cost(PROCESS_PARA proc, PACKAGE_PARA pack, BONDING_PARA bond, BONDING_KNOB knob);
-		void partition(ModuleLib all_module); //random select modules and put them into tier
+		float calc_design_cost(ModuleLib all_module);
+		void partition(ModuleLib all_module, int layer_num); //random select modules and put them into tier
 		void mutate(ModuleLib all_module); //adjust modules between tier to get better cost
 		void calc_tsv_num(ModuleLib all_module);
 };
