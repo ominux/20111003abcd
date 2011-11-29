@@ -5,6 +5,10 @@
 #ifndef TYPEDEF_H
 #define TYPEDEF_H
 
+#define FANOUT 4
+#define WIRE_PITCH 0.32
+#define WIRE_EFF 0.85
+
 typedef struct {
 	char name[50];				// technology name
 	double diameter;			// diameter of a single wafer, unit: mm

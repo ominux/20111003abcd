@@ -153,9 +153,6 @@ void Design::partition(ModuleLib all_module, int layer_count)
 	//third, each reduction, calculate the cost, and store the best design with min cost
 	int i;
 	int default_metal[MAX_TIER];
-	int fo = 4;
-	float ew = 0.85;
-	float w_pitch = 0.5; //unit um
 	float best_cost = 0.0; //current best design cost
 
 	//put initialized tier into design
@@ -180,7 +177,7 @@ void Design::partition(ModuleLib all_module, int layer_count)
 	for(TierVectItr tierItr = stackings->begin(); tierItr != stackings->end(); tierItr++)
 	{
 		//calculate default metal layer and also get the area
-		default_metal[count++] = tierItr->calc_metal_num(fo, ew, w_pitch);	
+		default_metal[count++] = tierItr->calc_metal_num();	
 	}	
 
 	//initial the best tiers
@@ -193,15 +190,15 @@ void Design::partition(ModuleLib all_module, int layer_count)
 	best_cost = temp_cost;
 
 	for(int a = default_metal[0]; a > 0 ; a--){
-		(*stackings)[0].calc_area(a, fo, ew, w_pitch);
+		(*stackings)[0].calc_area(a);
 		for(int b = default_metal[1]; b>0; b--){
-			(*stackings)[1].calc_area(b, fo, ew, w_pitch);
+			(*stackings)[1].calc_area(b);
 			if(layer_count > 2){ 
 				for(int c = default_metal[2]; c > 0; c--){
-					(*stackings)[2].calc_area(c, fo, ew, w_pitch);
+					(*stackings)[2].calc_area(c);
 					if(layer_count > 3){
 						for(int d = default_metal[3]; d > 0; d--){
-							(*stackings)[3].calc_area(d, fo, ew, w_pitch);
+							(*stackings)[3].calc_area(d);
 						
 							temp_cost = calc_design_cost(all_module);
 							if(temp_cost < best_cost)
@@ -250,9 +247,6 @@ void Design::mutate(ModuleLib all_module)
 {
 	int max_tier = 0; //the moudles come out of the least utilization tier
 	int min_tier = 0;
-	float w_pitch = 0.5;
-	int fo = 4;
-	float ew = 0.85;
 	int old_metal = 0; //inital total metal count, used for comparison
 	int new_metal; //metal count during mutation
 	int iter_times = 0;
@@ -271,7 +265,7 @@ void Design::mutate(ModuleLib all_module)
 		for(int i = 0; i < stackings->size(); i++)
 		{
 			float temp_util;
-			temp_util = (*best_tiers)[i].metal_util(w_pitch, ew);
+			temp_util = (*best_tiers)[i].metal_util();
 			//select the tier with least metal utilization
 			if(temp_util < min_util)
 			{
@@ -314,7 +308,7 @@ void Design::mutate(ModuleLib all_module)
 	
 		//get the new total metal layers
 		for(TierVectItr tier_itr = best_tiers->begin(); tier_itr != best_tiers->end(); tier_itr ++){
-			tier_itr->calc_metal_num(fo, ew, w_pitch);
+			tier_itr->calc_metal_num();
 			new_metal += tier_itr->getMetal_num();
 		}
 

@@ -11,6 +11,7 @@
 
 #include <list>
 #include "Module.h"
+#include "typedef.h"
 
 using namespace std;
 
@@ -46,9 +47,9 @@ class Tier
 		inline void setModule(Module * newModule) {modules->push_back(newModule);}
 	
 	//functions
-		int calc_metal_num(int fo, float ew, float w_pitch);
-		float calc_area(int m_num, int fo, float ew, float w_pitch);
-		float metal_util(float w_pitch, float ew);
+		int calc_metal_num();
+		float calc_area(int m_num);
+		float metal_util(); //called by mutate
 };
 
 #endif
