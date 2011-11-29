@@ -8,7 +8,7 @@
 #include <cmath>
 #include "Tier.h"
 
-int Tier::calc_metal_num(int fo, float ew, float w_pitch)
+int Tier::calc_metal_num()
 {
 	unsigned int gateCount;		
 	float init_area;
@@ -33,13 +33,13 @@ int Tier::calc_metal_num(int fo, float ew, float w_pitch)
 
 	//calculate the metal layer needed
 	int num;
-	num =(int)fo *rm *w_pitch *sqrt(gateCount/tier_area)/ew;//What is the unit??
+	num =(int)FANOUT *rm *WIRE_PITCH *sqrt(gateCount/tier_area)/WIRE_EFF;//What is the unit??
 	
 	this->metal_num = num;
 	return num;
 }
 
-float Tier::calc_area(int num, int fo, float ew, float w_pitch)
+float Tier::calc_area(int num)
 {
 	float area;
 	//calculation
@@ -57,7 +57,7 @@ float Tier::calc_area(int num, int fo, float ew, float w_pitch)
 
 	rm = i * j*(7*(pow(gateCount, rent_p-0.5)-1)/(pow(4, rent_p - 0.5)-1) - k);		
 	
-	dg = fo * rm * w_pitch / (ew * num);
+	dg = FANOUT * WIRE_PITCH * rm / (WIRE_EFF * num);
 	
 	area = gateCount * pow(dg, 2);	
 
@@ -66,13 +66,15 @@ float Tier::calc_area(int num, int fo, float ew, float w_pitch)
 	return area;
 }
 
-float Tier::metal_util(float w_pitch, float ew)
+float Tier::metal_util()
 {
 	float supply;
 	float demand;
 	float utilization;
 	unsigned int gateCount;
 
+	int w_pitch[10] = {0.14, 0.19, 0.14, 0.28, 0.28, 0.28, 0.8, 0.8, 1.6, 1.6};
+	
 	for(ModuleLstItr i = modules->begin(); i!= modules->end(); i++)
 		gateCount += (*i)->getCount();
 
@@ -87,8 +89,9 @@ float Tier::metal_util(float w_pitch, float ew)
 	
 	//the demand is not related to area!!??
 	demand = i * j*(7*(pow(gateCount, rent_p-0.5)-1)/(pow(4, rent_p - 0.5)-1) - k);	
-	
-	supply = tier_area * ew / (2 * w_pitch) ;
+
+	for(int i = 0; i < metal_num; i++)	
+		supply = tier_area * WIRE_EFF / w_pitch[i] ;
 	utilization = demand / supply;
 
 	return utilization;

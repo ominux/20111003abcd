@@ -39,7 +39,7 @@ class Design
 		inline Design(){
 			design_cost = 0.0;
 			best_cost = 0.0;
-			tsv_pitch = 16.0; //unit um^2
+			tsv_pitch = 49.0; //unit um^2
 			stackings = new TierVect();
 			best_tiers = new TierVect();
 			for(int i = 0; i<MAX_TIER; i++)
