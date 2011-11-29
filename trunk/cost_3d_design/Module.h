@@ -74,6 +74,7 @@ class Module
 		inline float 	getArea()	{return moduleArea;}
 		inline float	getCount()	{return gateCount;}
 		inline char *	getName()	{return name;}
+		inline int	getID()		{return moduleID;}
 
 		//modifiers
 		inline void setTier(int i) {tier_num = i;}

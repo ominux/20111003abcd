@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <list>
+#include <fstream>
 #include "Tier.h"
 #include "Module.h"
 #include "typedef.h"
@@ -31,12 +32,16 @@ class Design
 		TierVect * stackings; 	//all the tiers that the design includes
 		int tsv_num[MAX_TIER-1];
 		float tsv_pitch;
+		TierVect * best_tiers;
+		float best_cost;
 
 	public:
 		inline Design(){
 			design_cost = 0.0;
+			best_cost = 0.0;
 			tsv_pitch = 16.0; //unit um^2
 			stackings = new TierVect();
+			best_tiers = new TierVect();
 			for(int i = 0; i<MAX_TIER; i++)
 				tsv_num[i] = 0;
 		}
@@ -51,6 +56,7 @@ class Design
 		inline int* getTSV_num() {return tsv_num;}
 		inline float getDesign_cost() {return design_cost;}
 		inline TierVect* getStacking() {return stackings;}
+		inline float getBest_cost() {return best_cost;}
 	//modifiers
 		inline void setDesign_cost(float cost) {design_cost = cost;}
 		inline void setStacking(Tier newTier) {stackings->push_back(newTier);}
@@ -61,6 +67,8 @@ class Design
 		void partition(ModuleLib all_module, int layer_num); //random select modules and put them into tier
 		void mutate(ModuleLib all_module); //adjust modules between tier to get better cost
 		void calc_tsv_num(ModuleLib all_module);
+
+		void print_design(ofstream &output);
 };
 
 #endif

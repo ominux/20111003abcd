@@ -156,7 +156,13 @@ int main(int argc, char *argv[])
 	}
 
 	//remember to output design to file
+	int count = 0;
+	for(DesignsItr ditr = design_list.begin(); ditr != design_list.end(); ditr++, count++)
+	{
+		output << "Design: "<<count << endl;	
+		ditr->print_design(output);
 	
+	}
 	//deconstruct??remember to deconstruct modules
 	design_list.clear();
 	module_lib.clear();
