@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <iostream>
 #include <cstdlib>
+#include <fstream>
+#include <climits>
 
 using namespace std;
 
@@ -174,36 +176,163 @@ void Design::partition(ModuleLib all_module, int layer_count)
 	}
 
 	//metal layer reduction iteration
+	int count = 0;
 	for(TierVectItr tierItr = stackings->begin(); tierItr != stackings->end(); tierItr++)
 	{
-		//calculate default metal layer
-		tierItr->calc_metal_num(fo, ew, w_pitch);	
+		//calculate default metal layer and also get the area
+		default_metal[count++] = tierItr->calc_metal_num(fo, ew, w_pitch);	
 	}	
+
+	//initial the best tiers
+	for(i = 0; i< layer_count; i++)
+		best_tiers->push_back((*stackings)[i]);
+	
+	float temp_cost;
+	//initial cost
+	temp_cost = calc_design_cost(all_module);
+	best_cost = temp_cost;
+
+	for(int a = default_metal[0]; a > 0 ; a--){
+		(*stackings)[0].calc_area(a, fo, ew, w_pitch);
+		for(int b = default_metal[1]; b>0; b--){
+			(*stackings)[1].calc_area(b, fo, ew, w_pitch);
+			if(layer_count > 2){ 
+				for(int c = default_metal[2]; c > 0; c--){
+					(*stackings)[2].calc_area(c, fo, ew, w_pitch);
+					if(layer_count > 3){
+						for(int d = default_metal[3]; d > 0; d--){
+							(*stackings)[3].calc_area(d, fo, ew, w_pitch);
+						
+							temp_cost = calc_design_cost(all_module);
+							if(temp_cost < best_cost)
+							{
+								best_cost = temp_cost;
+								//best tier stored???
+								(*best_tiers)[3].setMetal_num(d);
+								(*best_tiers)[3].setTier_area((*stackings)[3].getTier_area());
+							}
+						}
+						
+					}
+					
+					temp_cost = calc_design_cost(all_module);
+					if(temp_cost < best_cost)
+					{
+						best_cost = temp_cost;
+						//best tier stored???
+					
+						(*best_tiers)[2].setMetal_num(c);
+						(*best_tiers)[2].setTier_area((*stackings)[2].getTier_area());
+					}
+					
+				} 
+			}
+			else{
+				temp_cost = calc_design_cost(all_module);
+				if(temp_cost < best_cost)
+				{
+					best_cost = temp_cost;
+					//best tier stored???
+					
+					(*best_tiers)[1].setMetal_num(b);
+					(*best_tiers)[1].setTier_area((*stackings)[1].getTier_area());
+					
+					(*best_tiers)[0].setMetal_num(a);
+					(*best_tiers)[0].setTier_area((*stackings)[0].getTier_area());
+				}
+			}
+		}
+	}
+	this->best_cost = best_cost;
 }
 
 void Design::mutate(ModuleLib all_module)
 {
-	int mutate_tier = 0;
-	float utilization =1.0;
+	int max_tier = 0; //the moudles come out of the least utilization tier
+	int min_tier = 0;
 	float w_pitch = 0.5;
 	int fo = 4;
 	float ew = 0.85;
+	int old_metal = 0; //inital total metal count, used for comparison
+	int new_metal; //metal count during mutation
+	int iter_times = 0;
+	int layer_count = 0;
 
-	for(int i = 0; i < stackings->size(); i++)
-	{
-		float temp_util;
-		temp_util = (*stackings)[i].metal_util(w_pitch, ew);
-		//select the tier with least metal utilization
-		if(temp_util < utilization)
-		{
-			utilization  = temp_util;
-			mutate_tier = i;
-		}
+	for(TierVectItr tier_itr = best_tiers->begin(); tier_itr != best_tiers->end(); tier_itr ++){
+		new_metal += tier_itr->getMetal_num();
+		layer_count++;
 	}
-	
-	//mutation process
-	
 
+	do{ 	
+		old_metal = new_metal;
+		float min_util = 1.0;
+		float max_util = 0.0;
+		int gate_count = INT_MAX;
+		for(int i = 0; i < stackings->size(); i++)
+		{
+			float temp_util;
+			temp_util = (*best_tiers)[i].metal_util(w_pitch, ew);
+			//select the tier with least metal utilization
+			if(temp_util < min_util)
+			{
+				min_util  = temp_util;
+				min_tier = i;
+			}
+			else if(temp_util > max_util)
+			{
+				max_util = temp_util;
+				max_tier = i;
+			}
+		}
+	
+		//mutation process
+		ModuleLst * temp_modules;
+		temp_modules = (*best_tiers)[min_tier].getModules();
+	
+		//put the least gate count module to another tier	
+		int temp_gc;
+		for(ModuleLstItr moitr = temp_modules->begin(); moitr != temp_modules->end(); moitr++)
+		{
+			temp_gc = (*moitr)->getCount();
+			if(temp_gc < gate_count){
+				gate_count = temp_gc;
+				//select the tier that can accept the module
+				int accept;
+				if(layer_count == 2)
+					accept = max_tier;
+				else{
+					do{
+						accept = rand() % layer_count; 		
+					}while(accept != min_tier && accept != max_tier);
+				}
+				//put the moduel into new tier
+				(*best_tiers)[accept].setModule(*moitr);	
+				//delete the module from old tier
+				temp_modules->erase(moitr);	
+			}	
+		}
+	
+		//get the new total metal layers
+		for(TierVectItr tier_itr = best_tiers->begin(); tier_itr != best_tiers->end(); tier_itr ++){
+			tier_itr->calc_metal_num(fo, ew, w_pitch);
+			new_metal += tier_itr->getMetal_num();
+		}
+
+		//avoid infinite loop
+		iter_times++;
+		if(iter_times > 100)
+			break;
+
+	}while(new_metal <= old_metal);
+
+	//calculate cost
+	stackings->clear();
+	//copy the best tiers back to stackings, for cost calculation is based on stackings
+	for(TierVectItr tier_itr = best_tiers->begin(); tier_itr != best_tiers->end(); tier_itr++)
+		stackings->push_back(*tier_itr);
+	
+	this->best_cost = calc_design_cost(all_module);
+	
 }
 
 //setting the tsv number
@@ -234,4 +363,31 @@ void Design::calc_tsv_num(ModuleLib all_module)
 			}			
 		}		
 	}	
+}
+
+
+//print design function
+void Design::print_design(ofstream &output)
+{
+	output<<"The best cost is " << this->best_cost << endl;	
+	for(TierVectItr tier_itr = best_tiers->begin(); tier_itr != best_tiers->end(); tier_itr++)
+	{
+		output << "Tier: " << endl;
+		output << "metal_num: "<< tier_itr->getMetal_num() << endl;
+		output << "tier area: "<< tier_itr->getTier_area() << endl;
+		
+		ModuleLst * module_list;
+		module_list = tier_itr->getModules();
+
+		int count = 0;
+		for(ModuleLstItr moitr = module_list->begin(); moitr != module_list->end(); moitr++)
+		{
+			output << "Module ID: "<< (*moitr)->getID() << endl;	
+			count++;
+		}
+		
+		output << "contains: " << count << "modules" << endl;
+	}
+
+	output << "End of this design..." << endl;
 }

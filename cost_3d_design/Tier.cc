@@ -11,14 +11,11 @@
 int Tier::calc_metal_num(int fo, float ew, float w_pitch)
 {
 	unsigned int gateCount;		
-	if(tier_area =0.0)
-	{
-		float init_area;
-		//calculate the total area by all modules
-		for(ModuleLstItr i = modules->begin(); i!= modules->end(); i++)
-			init_area += (*i)->getArea();	
-		setTier_area(init_area);
-	}	
+	float init_area;
+	//calculate the total area by all modules
+	for(ModuleLstItr i = modules->begin(); i!= modules->end(); i++)
+		init_area += (*i)->getArea();	
+	this->tier_area = init_area;
 	
 	for(ModuleLstItr i = modules->begin(); i!= modules->end(); i++)
 		gateCount += (*i)->getCount();
@@ -38,8 +35,7 @@ int Tier::calc_metal_num(int fo, float ew, float w_pitch)
 	int num;
 	num =(int)fo *rm *w_pitch *sqrt(gateCount/tier_area)/ew;//What is the unit??
 	
-	this->default_metal = num;
-
+	this->metal_num = num;
 	return num;
 }
 
