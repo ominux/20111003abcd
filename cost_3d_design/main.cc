@@ -37,10 +37,14 @@ void read_modules(ifstream * file, ModuleLib * lib)
 		int count; //gate count
 		float size; //module area
 		int connect_count;
+		int module_id;
+		file->getline(buffer,80); //get the empty line
 		file->getline(buffer,80);
+		sscanf(buffer, "%d", &module_id);
+		file->getline(buffer, 80);
 		sscanf(buffer, "%d %f", &count, &size);
 
-		Module * temp = new Module(i, count, size);
+		Module * temp = new Module(module_id, count, size);
 
 		file->getline(buffer,80);
 		sscanf(buffer, "%d", &connect_count);
@@ -103,6 +107,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}	
 	//variables
+	list<Design> test;
 	DesignList design_list;
 	ModuleLib  module_lib;	
 	

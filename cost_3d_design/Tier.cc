@@ -34,7 +34,9 @@ int Tier::calc_metal_num()
 	//calculate the metal layer needed
 	int num;
 	num =(int)FANOUT *rm *WIRE_PITCH *sqrt(gateCount/tier_area)/WIRE_EFF;//What is the unit??
-	
+
+	if(num > 10)
+		num = 10;	
 	this->metal_num = num;
 	return num;
 }
