@@ -17,12 +17,14 @@
 #include <cstring>
 #include <list>
 
-#define POPULATION 9 //total popluation number
+#define POPULATION 2 //total popluation number
 #define MAX_ITER  6 //totoal iteration time
+#define TEST	1 //macro for test functions
+
 
 using namespace std;
 
-typedef list<Design> DesignList;
+typedef list<Design *> DesignList;
 typedef DesignList::iterator DesignsItr;
 
 void read_modules(ifstream * file, ModuleLib * lib)
@@ -32,6 +34,9 @@ void read_modules(ifstream * file, ModuleLib * lib)
 	file->getline(buffer, 80);
 	sscanf(buffer, "%d", &module_size);
 
+	lib->reserve(module_size);
+
+	Module * temp;
 	for(int i = 0; i< module_size; i++)
 	{
 		int count; //gate count
@@ -44,30 +49,45 @@ void read_modules(ifstream * file, ModuleLib * lib)
 		file->getline(buffer, 80);
 		sscanf(buffer, "%d %f", &count, &size);
 
-		Module * temp = new Module(module_id, count, size);
+		temp = new Module(module_id, count, size);
 
 		file->getline(buffer,80);
 		sscanf(buffer, "%d", &connect_count);
 
 		int id, num;
+		Connection * connect;
 		for(int m = 0; m < connect_count; m++)
 		{
 			file->getline(buffer, 80);
 			sscanf(buffer, "%d %d", &id, &num);
-			Connection * connect = new Connection(id, num);
-			temp->setConnections(*connect); //copy the content of the connection to connections in module
-			delete connect;
+			connect = new Connection(id, num);
+			temp->setConnections(connect); //copy the content of the connection to connections in module
 		}		
 
-		lib->push_back(*temp); //copy the module to library
-		delete temp;
+		lib->push_back(temp); //copy the module to library
+		cout << "The component library size is "<<lib->size() << endl;
 	}
+	
+	//testing
+	#if TEST
+		for(ModuleLibItr moitr = lib->begin(); moitr != lib->end(); moitr++)
+		{
+			int count = 0;
+			ConnectVect * connect = (*moitr)->getConnections();
+			for(ConnectVectItr conitr = connect->begin(); conitr!= connect->end(); conitr++){
+				count++;
+				cout << "connected module "<< (*conitr)->getID() <<" Number " << (*conitr)->getNum()<< endl;
+			}
+
+			cout << "This module has "<< count << " connections" << endl;
+		}
+	#endif
 	
 }
 
-bool compare_design(Design first, Design second)
+bool compare_design(Design * first, Design * second)
 {
-	if(first.getDesign_cost() < second.getDesign_cost())
+	if(first->getDesign_cost() < second->getDesign_cost())
 		return true;
 	else
 		return false;
@@ -115,13 +135,13 @@ int main(int argc, char *argv[])
 	read_modules(&input, &module_lib);
 
 	//main body
+	Design *temp;
 	for(int i =0; i< POPULATION; i++)
 	{
-		Design * temp = new Design();
+		temp = new Design();
 		//temp->partition();
-		design_list.push_back(*temp);
-		(design_list.back()).partition(module_lib, layer_num); //calculate cost in here
-		delete temp;
+		design_list.push_back(temp);
+		(design_list.back())->partition(module_lib, layer_num); //calculate cost in here
 	}	
 		
 	//sorting based on design cost
@@ -138,7 +158,7 @@ int main(int argc, char *argv[])
 			//mutate part
 			if(ingrade > POPULATION/3){
 				if(ingrade<2*POPULATION/3){
-					ditr->mutate(module_lib);
+					(*ditr)->mutate(module_lib);
 				}else{
 					loser.push_back(ditr); //list of repartition design
 				}
@@ -146,12 +166,13 @@ int main(int argc, char *argv[])
 		}
 		for(list<DesignsItr>::iterator loseritr = loser.begin(); loseritr != loser.end(); loseritr++)
 			design_list.erase(*loseritr);
+		
+		Design * temp;
 		for(int regen = loser.size(); regen!=0; regen--)
 		{
-			Design * temp = new Design();
-			design_list.push_back(*temp);
-			(design_list.back()).partition(module_lib, layer_num);
-			delete temp;
+			temp = new Design();
+			design_list.push_back(temp);
+			(design_list.back())->partition(module_lib, layer_num);
 		}
 
 		loser.clear();
@@ -165,7 +186,7 @@ int main(int argc, char *argv[])
 	for(DesignsItr ditr = design_list.begin(); ditr != design_list.end(); ditr++, count++)
 	{
 		output << "Design: "<<count << endl;	
-		ditr->print_design(output);
+		(*ditr)->print_design(output);
 	
 	}
 	//deconstruct??remember to deconstruct modules

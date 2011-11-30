@@ -12,6 +12,8 @@
 
 #include <vector>
 #include <string.h>
+#include <stdio.h>
+#include <iostream>
 
 using namespace std;
 
@@ -29,7 +31,7 @@ class Connection
 	inline int getNum() {return connect_num;}
 };
 
-typedef vector<Connection> ConnectVect;
+typedef vector<Connection *> ConnectVect;
 typedef ConnectVect::iterator ConnectVectItr;
 
 class Module
@@ -65,7 +67,9 @@ class Module
 		{
 			//for(ConnectVectItr i = connections->begin(); i!= connections->end(); i++)
 			//	delete i;
-			delete connections;
+			cout << "Call Module deconstructor" << endl;
+			cout << "connections size in "<<moduleID << "is "<<connections->size() << endl;
+			connections->clear();
 		}
 	
 		//accessors
@@ -82,7 +86,7 @@ class Module
 		inline void setCount(int count) {gateCount = count;}
 		inline void setArea(int area)	{moduleArea = area;}
 		inline void setName(char *newName) {strcpy(name, newName);}
-		inline void setConnections(Connection newConnect) {connections->push_back(newConnect);}
+		inline void setConnections(Connection * newConnect) {connections->push_back(newConnect);}
 
 		//others
 	
