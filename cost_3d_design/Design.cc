@@ -20,8 +20,9 @@ float Design::calc_design_cost(ModuleLib all_module)
 {
 	float cost = 0;
 	float wafer_cost;
-	float util;
-	float die_yield = 1, y;
+	float util[MAX_TIER]; // wafer utilization of each tier
+	float die_yield = 1;
+	float y[MAX_TIER]; //die yield of each tier
 	int i;
 
 	//setting related parameters, from Xiangyu's, can changed to read from input file	
@@ -63,11 +64,11 @@ float Design::calc_design_cost(ModuleLib all_module)
 	for(TierVectItr m = stackings->begin(); m!= stackings->end(); m++)
 		number_tier++;
 
-	//calculate the maximum area, max area among tier+TSV overhead
-	float area = 0.0;
-	float temp_area = 0.0;
+	//calculate the area of each tier tier+TSV overhead
+	float area[MAX_TIER];
 	for(i = 0; i < number_tier; i++)
 	{
+		float temp_area;
 		temp_area = (*stackings)[i].getTier_area();;
 		//the bottom tier
 		if(!i)
@@ -79,15 +80,16 @@ float Design::calc_design_cost(ModuleLib all_module)
 		else
 			temp_area += (tsv_num[i-1] + tsv_num[i]) * tsv_pitch;
 
-		if(temp_area > area)
-			area = temp_area;
+		area[i] = temp_area;
 	}	
 
 	//calculate the yield and util of the process, util means how many die per wafer
-	util = (3.1415926) * process.diameter * process.diameter /4/area - 1 * 3.1415926 * process.diameter /sqrt(2* area);
 	float density;
 	density = process.defect_density/100;
-	y = (1 - exp(0 - 2 * area * density)) / (2 * area * density);
+	for(i = 0; i < number_tier; i++){	
+		util[i] = (3.1415926) * process.diameter * process.diameter /4/area[i] - 1 * 3.1415926 * process.diameter /sqrt(2* area[i]);
+		y[i] = (1 - exp(0 - 2 * area[i] * density)) / (2 * area[i] * density);
+	}
 
 	for(i = 0; i<number_tier; i++)
 	{
@@ -97,14 +99,16 @@ float Design::calc_design_cost(ModuleLib all_module)
 		wafer_cost += process.wafer_sort_cost;
 
 		if(knob.wafer_bonding){ //d2w bonding
-			wafer_cost += process.kgd_cost * util;//add KGD test cost
-			y = 1; //all the die are good die. yield is 1
+			wafer_cost += process.kgd_cost * util[i];//add KGD test cost
+			wafer_cost = wafer_cost/util[i]/y[i];
 		}
 
-		cost += wafer_cost/util; //consider the wafer utilization
+		else{
+			cost += wafer_cost/util[i]; //consider the wafer utilization
 
-		die_yield *= y;
-		cout<<"Cost of Tier"<< i<<" :" <<cost << " Yield: "<< y*100 <<"%"<< endl;
+			die_yield *= y[i];
+		}
+		cout<<"Cost of Tier"<< i<<" :" <<cost << " Yield: "<< y[i]*100 <<"%"<< endl;
 	}
 	//TSV cost
 	for(i = 0; i <number_tier-1; i++)
@@ -112,17 +116,17 @@ float Design::calc_design_cost(ModuleLib all_module)
 		if(knob.tsv == 0)
 			cost += tsv_num[i] * bonding.tsv_laser_cost;
 		else
-			cost += bonding.tsv_etch_cost/util; 
+			cost += bonding.tsv_etch_cost/util[i]; 
 	}	
 	//thinning cost
 	if(knob.face ==0)
-		cost += bonding.thinning_cost * (number_tier - 1)/util;
+		cost += bonding.thinning_cost * (number_tier - 1)/util[i];
 	else
-		cost += bonding.thinning_cost * (number_tier - 2)/util;
+		cost += bonding.thinning_cost * (number_tier - 2)/util[i];
 
 	//add bonding cost
 	if(knob.wafer_bonding==0){
-		cost += bonding.w2w_bonding_cost * (number_tier - 1) /util;
+		cost += bonding.w2w_bonding_cost * (number_tier - 1) /util[i];
 		die_yield *= pow(bonding.w2w_bonding_yield, (number_tier - 1));
 	}
 	else{
