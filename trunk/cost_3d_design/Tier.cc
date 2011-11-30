@@ -10,16 +10,19 @@
 
 int Tier::calc_metal_num()
 {
-	unsigned int gateCount;		
+	unsigned int count = 0;		
 	float init_area;
 	//calculate the total area by all modules
-	for(ModuleLstItr i = modules->begin(); i!= modules->end(); i++)
-		init_area += (*i)->getArea();	
+	for(ModuleLstItr i = modules->begin(); i!= modules->end(); i++){
+		init_area += (*i)->getArea();
+		count += (*i)->getCount();
+		cout << "module id" << (*i)->getID();
+		cout << " size " << (*i)->getArea();
+		cout << " count " << (*i)->getCount() << endl;	
+	}
 	this->tier_area = init_area;
+	this->gateCount = count;
 	
-	for(ModuleLstItr i = modules->begin(); i!= modules->end(); i++)
-		gateCount += (*i)->getCount();
-
 	//calculate average wire length
 	float i, j, k, rm;
 	float rent_p = 0.6;
@@ -45,9 +48,6 @@ float Tier::calc_area(int num)
 {
 	float area;
 	//calculation
-	unsigned int gateCount;
-	for(ModuleLstItr i = modules->begin(); i!= modules->end(); i++)
-		gateCount += (*i)->getCount();
 
 	float i, j, k, rm, dg;
 	float rent_p = 0.6;
@@ -77,9 +77,6 @@ float Tier::metal_util()
 
 	int w_pitch[10] = {0.14, 0.19, 0.14, 0.28, 0.28, 0.28, 0.8, 0.8, 1.6, 1.6};
 	
-	for(ModuleLstItr i = modules->begin(); i!= modules->end(); i++)
-		gateCount += (*i)->getCount();
-
 	//calculate average wire length
 	float i, j, k;
 	float rent_p = 0.6;

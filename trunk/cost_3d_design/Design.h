@@ -11,6 +11,7 @@
 #include <vector>
 #include <list>
 #include <fstream>
+#include <stdio.h>
 #include "Tier.h"
 #include "Module.h"
 #include "typedef.h"
@@ -19,9 +20,9 @@
 
 using namespace std;
 
-typedef vector<Tier> TierVect;
+typedef vector<Tier *> TierVect;
 typedef TierVect::iterator TierVectItr;
-typedef vector<Module> ModuleLib;
+typedef vector<Module *> ModuleLib;
 typedef ModuleLib::iterator ModuleLibItr;
 
 class Design
@@ -49,7 +50,9 @@ class Design
 		inline ~Design(){
 			//for(TierVectItr i =stackings->begin(); i!= stackings->end(); i++)
 			//	delete(*i);
-			delete stackings;
+			cout << "stackings address" << stackings << "size " << stackings->size() << endl;
+			stackings->clear();
+			best_tiers->clear();
 		}
 		
 	//accessors
@@ -59,7 +62,7 @@ class Design
 		inline float getBest_cost() {return best_cost;}
 	//modifiers
 		inline void setDesign_cost(float cost) {design_cost = cost;}
-		inline void setStacking(Tier newTier) {stackings->push_back(newTier);}
+		inline void setStacking(Tier * newTier) {stackings->push_back(newTier);}
 		inline void setTSV_num(int i, int num) {tsv_num[i] = num;}
 		inline void setTSV_pitch(float pitch) {tsv_pitch = pitch;}
 	//functions
