@@ -6,8 +6,13 @@
 #define TYPEDEF_H
 
 #define FANOUT 4
-#define WIRE_PITCH 0.32
+#define WIRE_PITCH 0.00032 //mm
 #define WIRE_EFF 0.85
+#define RENT_P	0.6
+#define ALPHA   0.8     //FANOUT/(FANOUT+1)
+#define RENT_K	1.4
+#define AREA_UTIL 0.8
+#define TSV_PITCH 0.000049 //unit mm^2
 
 typedef struct {
 	char name[50];				// technology name

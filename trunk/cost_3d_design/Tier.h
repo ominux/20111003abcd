@@ -23,7 +23,7 @@ class Tier
 {
 	private:
 		int metal_num;
-		int gateCount;
+		unsigned long gateCount;
 		float tier_area;	//unit mm^2
 		ModuleLst * modules;
 		
@@ -40,7 +40,7 @@ class Tier
 		}
 	
 	//accessors
-		inline int getGatecount() {return gateCount;}
+		inline unsigned long getGatecount() {return gateCount;}
 		inline int getMetal_num() {return metal_num;}
 		inline float getTier_area() {return tier_area;}
 		inline ModuleLst * getModules() {return modules;}
@@ -49,7 +49,7 @@ class Tier
 		inline void setMetal_num(int num) {metal_num = num;}
 		inline void setTier_area(float area) {tier_area = area;}
 		inline void setModule(Module * newModule) {modules->push_back(newModule);}
-		inline void setGatecount(int count) {gateCount = count;}
+		inline void setGatecount(unsigned long count) {gateCount = count;}
 	
 	//functions
 		int calc_metal_num();
