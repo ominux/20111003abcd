@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <climits>
+#include <cfloat>
 
 #define OVERHEAD_RATIO 0.2
 
@@ -27,7 +28,6 @@ float Design::calc_design_cost(ModuleLib all_module)
 	float y[MAX_TIER]; //die yield of each tier
 	int i;
 
-	tsv_pitch = 49.0;
 	//setting related parameters, from Xiangyu's, can changed to read from input file	
 	PROCESS_PARA process;
 	PACKAGE_PARA package;
@@ -54,7 +54,7 @@ float Design::calc_design_cost(ModuleLib all_module)
 
 	knob.face = 0;
 	knob.tsv = 1;
-	knob.wafer_bonding = 1;
+	knob.wafer_bonding = 0;
 
 	//package.name = "pBGA";
 	package.package_cost = 0.218;
@@ -77,20 +77,21 @@ float Design::calc_design_cost(ModuleLib all_module)
 		temp_area = (*stackings)[i]->getTier_area();;
 		//the bottom tier
 		if(!i)
-			temp_area += tsv_num[i]*tsv_pitch * OVERHEAD_RATIO;
+			temp_area += tsv_num[i]*TSV_PITCH * OVERHEAD_RATIO;
 		//the topest tier
 		else if(i == number_tier -1)
-			temp_area += tsv_num[i-1]*tsv_pitch * OVERHEAD_RATIO;
+			temp_area += tsv_num[i-1]*TSV_PITCH * OVERHEAD_RATIO;
 		//tiers in the middle
 		else
-			temp_area += (tsv_num[i-1] + tsv_num[i]) * tsv_pitch * OVERHEAD_RATIO;
+			temp_area += (tsv_num[i-1] + tsv_num[i]) * TSV_PITCH * OVERHEAD_RATIO;
 
 		area[i] = temp_area;
 	}	
 
 	//calculate the yield and util of the process, util means how many die per wafer
 	float density;
-	density = process.defect_density/100;
+	density = process.defect_density/100; //convert from cm scale to mm scale
+	//area should be in mm^2 scale 
 	for(i = 0; i < number_tier; i++){	
 		util[i] = (3.1415926) * process.diameter * process.diameter /4/area[i] - 1 * 3.1415926 * process.diameter /sqrt(2* area[i]);
 		y[i] = (1 - exp(0 - 2 * area[i] * density)) / (2 * area[i] * density);
@@ -102,7 +103,10 @@ float Design::calc_design_cost(ModuleLib all_module)
 		wafer_cost = process.wafer_cost;
 		int metal_num = (*stackings)[i]->getMetal_num();
 		wafer_cost += metal_num * process.metal_layer_cost;
+		cout << endl;
+		cout << "metal layer cost " << metal_num * process.metal_layer_cost << endl; 
 		wafer_cost += process.wafer_sort_cost;
+		cout << "inter wafer cost" << wafer_cost << endl;
 
 		if(knob.wafer_bonding){ //d2w bonding
 			wafer_cost += process.kgd_cost * util[i];//add KGD test cost
@@ -115,6 +119,9 @@ float Design::calc_design_cost(ModuleLib all_module)
 			die_yield *= y[i];
 		}
 		cout<<"Cost of Tier"<< i<<" :" <<cost << " Yield: "<< y[i]*100 <<"%"<< endl;
+		cout << "Util " << util[i] << endl;
+		cout << "Metal layer " << (*stackings)[i]->getMetal_num()<< endl ;
+		cout << "Area " << (*stackings)[i]->getTier_area() << endl;
 	}
 	//TSV cost
 	for(i = 0; i <number_tier-1; i++)
@@ -174,14 +181,22 @@ void Design::partition(ModuleLib all_module, int layer_count)
 		stackings->push_back(temp_tier);
 		//delete temp_tier;		 
 	}
+
+	for(i = 0; i< layer_count; i++)
+	{
+		temp_tier = new Tier();
+		best_tiers->push_back(temp_tier);
+	}
 	
 	//module partition, randomly
 	for(ModuleLibItr moItr = all_module.begin(); moItr != all_module.end(); moItr++)
 	{
 		int choice;
 		choice = rand() % layer_count;
+		cout << "Partitioning" << "Module " << (*moItr)->getID() << "put to tier " << choice <<endl;
 		(*moItr)->setTier(choice); //*moItr is type Module
 		(*stackings)[choice]->setModule(*moItr);	
+		(*best_tiers)[choice]->setModule(*moItr);
 	}
 
 	//metal layer reduction iteration
@@ -189,32 +204,40 @@ void Design::partition(ModuleLib all_module, int layer_count)
 	for(TierVectItr tierItr = stackings->begin(); tierItr != stackings->end(); tierItr++)
 	{
 		//calculate default metal layer and also get the area
-		default_metal[count++] = (*tierItr)->calc_metal_num();	
+		default_metal[count++] = (*tierItr)->calc_metal_num();		
 	}	
 
-	//initial the best tiers
-	for(i = 0; i< layer_count; i++)
-		best_tiers->push_back((*stackings)[i]);
+	for(i = 0; i < layer_count; i++)
+	{
+		(*best_tiers)[i]->setMetal_num((*stackings)[i]->getMetal_num());
+		(*best_tiers)[i]->setTier_area((*stackings)[i]->getTier_area());
+	}
+
+	for(TierVectItr tierItr = best_tiers->begin(); tierItr != best_tiers->end(); tierItr++)
+	{
+		cout << "Best Tier area " <<(*tierItr)->getTier_area();
+		cout << "Metal num " << (*tierItr)->getMetal_num() << endl; 
+	}
 	
 	float temp_cost;
 	//initial cost
 	temp_cost = calc_design_cost(all_module);
 	best_cost = temp_cost;
 
-	for(int a = default_metal[0]; a > 0 ; a--){
+	for(int a = default_metal[0]; a > 2 ; a--){
 		(*stackings)[0]->calc_area(a);
-		cout << "tier 0 area "<< (*stackings)[0]->getTier_area() << endl;
-		for(int b = default_metal[1]; b>0; b--){
+		//cout << "tier 0 area "<< (*stackings)[0]->getTier_area() << endl;
+		for(int b = default_metal[1]; b > 2; b--){
 			(*stackings)[1]->calc_area(b);
-			cout << "tier 1 area" << (*stackings)[1]->getTier_area() << endl;
+			//cout << "tier 1 area" << (*stackings)[1]->getTier_area() << endl;
 			if(layer_count > 2){ 
-				for(int c = default_metal[2]; c > 0; c--){
+				for(int c = default_metal[2]; c > 2; c--){
 					(*stackings)[2]->calc_area(c);
-					cout << "tier 2 area" << (*stackings)[2]->getTier_area() << endl;
+					//cout << "tier 2 area" << (*stackings)[2]->getTier_area() << endl;
 					if(layer_count > 3){
-						for(int d = default_metal[3]; d > 0; d--){
+						for(int d = default_metal[3]; d > 2; d--){
 							(*stackings)[3]->calc_area(d);
-							cout << "tier 3 area" << (*stackings)[3]->getTier_area() << endl;
+							//cout << "tier 3 area" << (*stackings)[3]->getTier_area() << endl;
 						
 							temp_cost = calc_design_cost(all_module);
 							if(temp_cost < best_cost)
@@ -223,6 +246,10 @@ void Design::partition(ModuleLib all_module, int layer_count)
 								//best tier stored???
 								(*best_tiers)[3]->setMetal_num(d);
 								(*best_tiers)[3]->setTier_area((*stackings)[3]->getTier_area());
+							
+								//cout << "Partition!!" << endl;
+								//cout << "Tier 3" << "metal num " << (*best_tiers)[3]->getMetal_num();
+								//cout << "area " << (*best_tiers)[3] -> getTier_area();
 							}
 						}
 						
@@ -236,8 +263,10 @@ void Design::partition(ModuleLib all_module, int layer_count)
 					
 						(*best_tiers)[2]->setMetal_num(c);
 						(*best_tiers)[2]->setTier_area((*stackings)[2]->getTier_area());
-					}
 					
+						//cout << "Tier 2" << "metal num " << (*best_tiers)[2]->getMetal_num();
+					//	cout << "area " << (*best_tiers)[2] -> getTier_area();
+					}	
 				} 
 			}
 			else{
@@ -246,16 +275,32 @@ void Design::partition(ModuleLib all_module, int layer_count)
 				{
 					best_cost = temp_cost;
 					//best tier stored???
-					
+				
+					cout << "record the best Tiers!!!!" << endl;
+	
 					(*best_tiers)[1]->setMetal_num(b);
 					(*best_tiers)[1]->setTier_area((*stackings)[1]->getTier_area());
 					
 					(*best_tiers)[0]->setMetal_num(a);
 					(*best_tiers)[0]->setTier_area((*stackings)[0]->getTier_area());
+
+					/*cout << "Partition!!" << endl;
+					cout << "Tier 0" << "metal num " << (*best_tiers)[0]->getMetal_num();
+					cout << "area " << (*best_tiers)[0] -> getTier_area();
+
+					cout << "Tier 1" << "metal num " << (*best_tiers)[1]->getMetal_num();
+					cout << "area " << (*best_tiers)[1] -> getTier_area(); */
 				}
 			}
 		}
 	}
+
+	for(TierVectItr tierItr = best_tiers->begin(); tierItr != best_tiers->end(); tierItr++)
+	{
+		cout << "Best Tier area " <<(*tierItr)->getTier_area();
+		cout << "Metal num " << (*tierItr)->getMetal_num() << endl; 
+	}
+
 	this->best_cost = best_cost;
 }
 
@@ -268,6 +313,8 @@ void Design::mutate(ModuleLib all_module)
 	int iter_times = 0;
 	int layer_count = 0;
 
+	cout << "Begin Mutation ... "<<endl;
+
 	for(TierVectItr tier_itr = best_tiers->begin(); tier_itr != best_tiers->end(); tier_itr ++){
 		new_metal += (*tier_itr)->getMetal_num();
 		layer_count++;
@@ -275,54 +322,54 @@ void Design::mutate(ModuleLib all_module)
 
 	do{ 	
 		old_metal = new_metal;
-		float min_util = 1.0;
-		float max_util = 0.0;
-		int gate_count = INT_MAX;
+		float min_area = FLT_MAX;
+		float max_area = 0.0;
+		unsigned long gate_count = ULONG_MAX;
 		for(int i = 0; i < stackings->size(); i++)
 		{
-			float temp_util;
-			temp_util = (*best_tiers)[i]->metal_util();
+			float temp_area;
+			temp_area = (*best_tiers)[i]->getTier_area();
 			//select the tier with least metal utilization
-			if(temp_util < min_util)
+			if(temp_area < min_area)
 			{
-				min_util  = temp_util;
+				min_area  = temp_area;
 				min_tier = i;
 			}
-			else if(temp_util > max_util)
+			if(temp_area > max_area)
 			{
-				max_util = temp_util;
+				max_area = temp_area;
 				max_tier = i;
 			}
 		}
 	
 		//mutation process
 		ModuleLst * temp_modules;
-		temp_modules = (*best_tiers)[min_tier]->getModules();
+		temp_modules = (*best_tiers)[max_tier]->getModules();
 	
 		//put the least gate count module to another tier	
 		int temp_gc;
+		ModuleLstItr loser;
+		if(temp_modules->size() == 1)
+			break;
+
+		//find the module with least gatecount
 		for(ModuleLstItr moitr = temp_modules->begin(); moitr != temp_modules->end(); moitr++)
 		{
 			temp_gc = (*moitr)->getCount();
+			//find the smallest one
 			if(temp_gc < gate_count){
 				gate_count = temp_gc;
-				//select the tier that can accept the module
-				int accept;
-				if(layer_count == 2)
-					accept = max_tier;
-				else{
-					do{
-						accept = rand() % layer_count; 		
-					}while(accept != min_tier && accept != max_tier);
-				}
-				//put the moduel into new tier
-				(*best_tiers)[accept]->setModule(*moitr);	
-				//delete the module from old tier
-				temp_modules->erase(moitr);	
+				//record the one that with least gate count
+				loser = moitr;
 			}	
 		}
+
+		cout << "Module ID" << (*loser)->getID()<< endl;
+		temp_modules->erase(loser);
+		(*best_tiers)[min_tier]->setModule(*loser);
 	
 		//get the new total metal layers
+		new_metal = 0;
 		for(TierVectItr tier_itr = best_tiers->begin(); tier_itr != best_tiers->end(); tier_itr ++){
 			(*tier_itr)->calc_metal_num();
 			new_metal += (*tier_itr)->getMetal_num();
@@ -330,31 +377,35 @@ void Design::mutate(ModuleLib all_module)
 
 		//avoid infinite loop
 		iter_times++;
-		if(iter_times > 100)
+		if(iter_times > 10)
 			break;
 
 	}while(new_metal <= old_metal);
 
 	//calculate cost
 	stackings->clear();
+	
+	for(TierVectItr tierItr = best_tiers->begin(); tierItr != best_tiers->end(); tierItr++)
+	{
+		cout << "Best Tier area " <<(*tierItr)->getTier_area();
+		cout << "Metal num " << (*tierItr)->getMetal_num() << endl; 
+	}
+
 	//copy the best tiers back to stackings, for cost calculation is based on stackings
 	for(TierVectItr tier_itr = best_tiers->begin(); tier_itr != best_tiers->end(); tier_itr++)
 		stackings->push_back(*tier_itr);
 	
 	this->best_cost = calc_design_cost(all_module);
-	
+
+	cout << "End of Mutation..." << endl;	
 }
 
 //setting the tsv number
 void Design::calc_tsv_num(ModuleLib all_module)
 {
-	ModuleLibItr one;
-	int	temp_id;
-	int 	temp_num;
-	int	current_tier;
-	int	con_tier;
-
-	for(one = all_module.begin(); one!= all_module.end(); one++)
+	unsigned long tempCount[MAX_TIER];
+	
+/*	for(one = all_module.begin(); one!= all_module.end(); one++)
 	{
 		//get the connection of one module
 		ConnectVect * one_con = (*one)->getConnections();
@@ -375,9 +426,37 @@ void Design::calc_tsv_num(ModuleLib all_module)
 		cout << "Module ID "<< (*one)->getID() << "Tier: "<<(*one)->getTier() << endl;
 				
 	}	
+*/
+	int i = 0;
+	float rent;
+	float temp1, temp2, temp3;
+	unsigned long add_result;
+	int number;
+	for(TierVectItr tieritr = stackings->begin(); tieritr != stackings->end(); tieritr++)
+	{	
+		tempCount[i] = (*tieritr)->getGatecount();
+		i++;	
+	}
+
+	for(int j = 0; j < i - 1; j++)
+	{
+		rent = RENT_P - 1;
+		add_result = tempCount[j] + tempCount[j+1];
+		temp1 = ALPHA * RENT_K * add_result * (1- pow(add_result, (RENT_P - 1)));
+		temp2 = ALPHA * RENT_K * tempCount[j] * (1 - pow(tempCount[j], (RENT_P - 1)));
+		temp3 = ALPHA * RENT_K * tempCount[j+1] * (1 - pow(tempCount[j+1], (RENT_P - 1)));
+
+		 number =(int)(temp1 - temp2 - temp3);
+		if(number < 0)
+			this->tsv_num[j] = 0;
+
+		else
+			this->tsv_num[j] = number;	
+	}
 	
-	for(int i = 0; i < MAX_TIER; i++)
-		cout << "TSV numbers: "<<tsv_num[i] << endl;
+	//test
+	//for(int i = 0; i < MAX_TIER; i++)
+	//	cout << "TSV numbers: "<<tsv_num[i] << endl;
 }
 
 
@@ -390,7 +469,7 @@ void Design::print_design(ofstream &output)
 		output << "Tier: " << endl;
 		output << "metal_num: "<< (*tier_itr)->getMetal_num() << endl;
 		output << "tier area: "<< (*tier_itr)->getTier_area() << endl;
-		
+		output << "gate Count: "<<(*tier_itr)->getGatecount() << endl;		
 		ModuleLst * module_list;
 		module_list = (*tier_itr)->getModules();
 
@@ -401,8 +480,10 @@ void Design::print_design(ofstream &output)
 			count++;
 		}
 		
-		output << "contains: " << count << "modules" << endl;
+		output << "contains: " << count << " modules" << endl;
+		output << endl;
 	}
 
 	output << "End of this design..." << endl;
+	output << endl;
 }

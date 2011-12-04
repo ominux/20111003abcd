@@ -17,10 +17,10 @@
 #include <cstring>
 #include <list>
 
-#define POPULATION 2 //total popluation number
+#define POPULATION 6 //total popluation number
 #define MAX_ITER  6 //totoal iteration time
 #define TEST	1 //macro for test functions
-
+#define NAN2_SIZE 0.0000789 //area of nan2 gate, unit mm^2
 
 using namespace std;
 
@@ -39,7 +39,7 @@ void read_modules(ifstream * file, ModuleLib * lib)
 	Module * temp;
 	for(int i = 0; i< module_size; i++)
 	{
-		int count; //gate count
+		unsigned long count; //gate count
 		float size; //module area
 		int connect_count;
 		int module_id;
@@ -47,22 +47,12 @@ void read_modules(ifstream * file, ModuleLib * lib)
 		file->getline(buffer,80);
 		sscanf(buffer, "%d", &module_id);
 		file->getline(buffer, 80);
-		sscanf(buffer, "%d %f", &count, &size);
+		sscanf(buffer, "%f", &size);
+
+		count = (unsigned long)(size / NAN2_SIZE);
+		//gate count is equal to size/nand2gate 
 
 		temp = new Module(module_id, count, size);
-
-		file->getline(buffer,80);
-		sscanf(buffer, "%d", &connect_count);
-
-		int id, num;
-		Connection * connect;
-		for(int m = 0; m < connect_count; m++)
-		{
-			file->getline(buffer, 80);
-			sscanf(buffer, "%d %d", &id, &num);
-			connect = new Connection(id, num);
-			temp->setConnections(connect); //copy the content of the connection to connections in module
-		}		
 
 		lib->push_back(temp); //copy the module to library
 		cout << "The component library size is "<<lib->size() << endl;
@@ -70,24 +60,14 @@ void read_modules(ifstream * file, ModuleLib * lib)
 	
 	//testing
 	#if TEST
-		for(ModuleLibItr moitr = lib->begin(); moitr != lib->end(); moitr++)
-		{
-			int count = 0;
-			ConnectVect * connect = (*moitr)->getConnections();
-			for(ConnectVectItr conitr = connect->begin(); conitr!= connect->end(); conitr++){
-				count++;
-				cout << "connected module "<< (*conitr)->getID() <<" Number " << (*conitr)->getNum()<< endl;
-			}
-
-			cout << "This module has "<< count << " connections" << endl;
-		}
+		cout << "total module is "<< lib->size() << endl;
 	#endif
 	
 }
 
 bool compare_design(Design * first, Design * second)
 {
-	if(first->getDesign_cost() < second->getDesign_cost())
+	if(first->getBest_cost() < second->getBest_cost())
 		return true;
 	else
 		return false;
@@ -182,6 +162,7 @@ int main(int argc, char *argv[])
 	}
 
 	//remember to output design to file
+	design_list.sort(compare_design);
 	int count = 0;
 	for(DesignsItr ditr = design_list.begin(); ditr != design_list.end(); ditr++, count++)
 	{

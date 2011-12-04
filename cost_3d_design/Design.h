@@ -32,7 +32,6 @@ class Design
 		float design_cost;	//final design total cost
 		TierVect * stackings; 	//all the tiers that the design includes
 		int tsv_num[MAX_TIER-1];
-		float tsv_pitch;
 		TierVect * best_tiers;
 		float best_cost;
 
@@ -40,7 +39,6 @@ class Design
 		inline Design(){
 			design_cost = 0.0;
 			best_cost = 0.0;
-			tsv_pitch = 49.0; //unit um^2
 			stackings = new TierVect();
 			best_tiers = new TierVect();
 			for(int i = 0; i<MAX_TIER; i++)
@@ -64,7 +62,6 @@ class Design
 		inline void setDesign_cost(float cost) {design_cost = cost;}
 		inline void setStacking(Tier * newTier) {stackings->push_back(newTier);}
 		inline void setTSV_num(int i, int num) {tsv_num[i] = num;}
-		inline void setTSV_pitch(float pitch) {tsv_pitch = pitch;}
 	//functions
 		float calc_design_cost(ModuleLib all_module);
 		void partition(ModuleLib all_module, int layer_num); //random select modules and put them into tier
